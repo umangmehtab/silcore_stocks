@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Silcore — Stock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF0ED;
+    --surface:#FFFFFF;
+    --surface-2:#F6F7F5;
+    --ink:#191C1F;
+    --muted:#697079;
+    --faint:#9AA1A8;
+    --hair:#D9DDD8;
+    --hair-strong:#C3C8C1;
+    --steel:#1F5C6B;      /* structure / primary */
+    --steel-deep:#123c47;
+    --add:#2E7D5B;        /* positive / add */
+    --add-soft:#E4F1EA;
+    --remove:#B0472F;     /* negative / remove */
+    --remove-soft:#F6E6E1;
+    --amber:#C98A1B;
+    --shadow:0 1px 2px rgba(20,30,25,.06),0 8px 24px rgba(20,30,25,.06);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      linear-gradient(var(--paper),var(--paper));
+    color:var(--ink);
+    font-family:"Inter",system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .wrap{max-width:840px;margin:0 auto;padding:20px 18px 96px}
+
+  /* ---------- Header ---------- */
+  header.top{
+    display:flex;align-items:center;gap:14px;
+    padding:6px 2px 20px;
+  }
+  .mark{
+    width:42px;height:42px;flex:0 0 auto;border-radius:9px;
+    background:var(--steel-deep);position:relative;overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .mark::before,.mark::after{
+    content:"";position:absolute;left:7px;right:7px;height:3px;border-radius:2px;
+    background:rgba(255,255,255,.85);
+  }
+  .mark::before{top:12px;box-shadow:0 6px 0 rgba(255,255,255,.55),0 12px 0 rgba(255,255,255,.3),0 18px 0 rgba(255,255,255,.16)}
+  .mark::after{display:none}
+  .brand h1{
+    font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:22px;
+    letter-spacing:-.01em;margin:0;line-height:1;
+  }
+  .brand p{margin:3px 0 0;color:var(--muted);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+
+  /* ---------- Product tabs ---------- */
+  .tabs{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
+    background:var(--surface);border:1px solid var(--hair);border-radius:12px;
+    padding:6px;box-shadow:var(--shadow);margin-bottom:18px;
+  }
+  .tab{
+    appearance:none;border:0;background:transparent;cursor:pointer;
+    font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:15px;color:var(--muted);
+    padding:11px 8px;border-radius:8px;transition:.15s;letter-spacing:.01em;
+  }
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{background:var(--steel);color:#fff;box-shadow:0 1px 2px rgba(18,60,71,.4)}
+  .tab:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+
+  /* ---------- Readout card ---------- */
+  .card{background:var(--surface);border:1px solid var(--hair);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .readout{padding:20px 20px 22px;margin-bottom:16px}
+  .readout .eyebrow{
+    display:flex;justify-content:space-between;align-items:baseline;
+    color:var(--muted);font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+  }
+  .readout .eyebrow b{color:var(--ink);font-weight:600;text-transform:none;letter-spacing:0;font-size:13px}
+  .big{
+    font-family:"IBM Plex Mono",monospace;font-weight:600;
+    font-size:clamp(46px,13vw,72px);line-height:1;letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;margin:6px 0 2px;
+  }
+  .big.neg{color:var(--remove)}
+  .big small{font-size:.32em;color:var(--faint);font-weight:500;margin-left:8px;letter-spacing:.02em}
+  .spec-line{color:var(--muted);font-size:13.5px}
+  .spec-line span{color:var(--ink);font-weight:600}
+
+  /* stack gauge */
+  .gauge{margin-top:16px;height:12px;border-radius:6px;background:var(--surface-2);border:1px solid var(--hair);overflow:hidden;position:relative}
+  .gauge i{position:absolute;inset:0;width:0;background:
+      repeating-linear-gradient(90deg,var(--steel) 0 10px,#2a6f80 10px 20px);
+      transition:width .4s ease}
+
+  /* ---------- Selectors ---------- */
+  .selectors{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding-left:2px}
+  .selWrap{position:relative}
+  select{
+    width:100%;appearance:none;font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:500;
+    color:var(--ink);background:var(--surface);border:1px solid var(--hair-strong);border-radius:11px;
+    padding:13px 40px 13px 14px;cursor:pointer;box-shadow:var(--shadow);
+  }
+  select:focus-visible{outline:2px solid var(--steel);outline-offset:1px;border-color:var(--steel)}
+  .selWrap::after{content:"";position:absolute;right:15px;top:50%;transform:translateY(-30%);
+    border:6px solid transparent;border-top-color:var(--muted);pointer-events:none}
+
+  /* ---------- Actions ---------- */
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
+  .btn{
+    appearance:none;cursor:pointer;font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:16px;
+    border-radius:12px;padding:15px 12px;border:1px solid transparent;transition:.15s;display:flex;
+    align-items:center;justify-content:center;gap:9px;box-shadow:var(--shadow);
+  }
+  .btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .btn .ico{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:20px;line-height:1}
+  .btn-add{background:var(--add);color:#fff}
+  .btn-add:hover{background:#25694a}
+  .btn-remove{background:var(--surface);color:var(--remove);border-color:var(--remove)}
+  .btn-remove:hover{background:var(--remove-soft)}
+
+  /* ---------- Breakdown table ---------- */
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin:26px 4px 12px}
+  .section-head h2{font-family:"Space Grotesk",sans-serif;font-size:16px;font-weight:600;margin:0;letter-spacing:.01em}
+  .section-head .hint{color:var(--faint);font-size:12px}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--hair);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  thead th{
+    text-align:right;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+    font-weight:600;padding:12px 14px;background:var(--surface-2);border-bottom:1px solid var(--hair)
+  }
+  thead th:first-child{text-align:left}
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--hair);font-family:"IBM Plex Mono",monospace;
+    font-variant-numeric:tabular-nums;text-align:right;font-size:14.5px}
+  tbody td:first-child{text-align:left;font-family:"Inter",sans-serif;color:var(--muted);font-size:13.5px}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr.active{background:#eef6f7}
+  tbody tr.active td:first-child{color:var(--steel);font-weight:600}
+  td.net{font-weight:600}
+  td.net.neg{color:var(--remove)}
+  tr.totals td{background:var(--surface-2);font-weight:600;color:var(--ink);border-top:1px solid var(--hair-strong)}
+  tr.totals td:first-child{font-family:"Space Grotesk",sans-serif;letter-spacing:.02em}
+
+  /* ---------- Ledger ---------- */
+  .ledger{margin-top:10px;list-style:none;padding:0}
+  .ledger li{
+    display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);
+    border:1px solid var(--hair);border-bottom:0;font-size:14px;
+  }
+  .ledger li:first-child{border-radius:var(--radius) var(--radius) 0 0}
+  .ledger li:last-child{border-bottom:1px solid var(--hair);border-radius:0 0 var(--radius) var(--radius)}
+  .ledger .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .ledger .dot.add{background:var(--add)}
+  .ledger .dot.rem{background:var(--remove)}
+  .ledger .amt{font-family:"IBM Plex Mono",monospace;font-weight:600;font-variant-numeric:tabular-nums}
+  .ledger .amt.add{color:var(--add)}
+  .ledger .amt.rem{color:var(--remove)}
+  .ledger .meta{color:var(--muted);font-size:13px;flex:1;min-width:0}
+  .ledger .meta b{color:var(--ink);font-weight:600}
+  .ledger .when{color:var(--faint);font-size:12px;white-space:nowrap}
+  .empty{color:var(--faint);font-size:14px;padding:22px 14px;text-align:center;background:var(--surface);
+    border:1px dashed var(--hair-strong);border-radius:var(--radius)}
+
+  /* ---------- Manage (collapsible) ---------- */
+  details.manage{margin-top:26px;background:var(--surface);border:1px solid var(--hair);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  details.manage>summary{cursor:pointer;list-style:none;padding:15px 18px;font-family:"Space Grotesk",sans-serif;
+    font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+  details.manage>summary::-webkit-details-marker{display:none}
+  details.manage>summary .chev{color:var(--muted);transition:.2s;font-family:"IBM Plex Mono",monospace}
+  details.manage[open]>summary .chev{transform:rotate(90deg)}
+  .manage-body{padding:4px 18px 20px;border-top:1px solid var(--hair)}
+  .manage-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-top:16px}
+  .manage-row .field label{margin-bottom:2px}
+  .manage-row input{
+    width:100%;font-family:"IBM Plex Mono",monospace;font-size:15px;padding:11px 12px;
+    border:1px solid var(--hair-strong);border-radius:10px;background:var(--surface-2)
+  }
+  .manage-row input:focus-visible{outline:2px solid var(--steel);outline-offset:1px}
+  .mini{appearance:none;cursor:pointer;background:var(--steel);color:#fff;border:0;border-radius:10px;
+    font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:14px;padding:11px 16px;white-space:nowrap}
+  .mini:hover{background:var(--steel-deep)}
+  .reset{margin-top:20px;font-size:12.5px;color:var(--faint)}
+  .reset button{background:none;border:0;color:var(--remove);cursor:pointer;text-decoration:underline;font-size:12.5px;padding:0}
+
+  /* ---------- Modal ---------- */
+  .scrim{position:fixed;inset:0;background:rgba(18,30,25,.42);display:none;align-items:flex-end;justify-content:center;z-index:40;padding:0}
+  .scrim.open{display:flex}
+  @media(min-width:600px){.scrim{align-items:center;padding:20px}}
+  .modal{background:var(--surface);width:100%;max-width:420px;border-radius:18px 18px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -8px 40px rgba(0,0,0,.2)}
+  @media(min-width:600px){.modal{border-radius:18px}}
+  .modal h3{font-family:"Space Grotesk",sans-serif;margin:0 0 4px;font-size:19px}
+  .modal .sub{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+  .modal .sub b{color:var(--ink)}
+  .amount-in{width:100%;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:30px;text-align:center;
+    padding:16px;border:1px solid var(--hair-strong);border-radius:12px;background:var(--surface-2);letter-spacing:.01em}
+  .amount-in:focus-visible{outline:2px solid var(--steel);outline-offset:1px}
+  .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+  .modal .ghost{background:var(--surface-2);color:var(--muted);border:1px solid var(--hair)}
+  .err{color:var(--remove);font-size:13px;min-height:18px;margin:8px 2px 0}
+
+  /* ---------- Toast ---------- */
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,80px);background:var(--ink);color:#fff;
+    padding:12px 18px;border-radius:11px;font-size:14px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.3);
+    opacity:0;transition:.3s;z-index:60;display:flex;align-items:center;gap:9px;pointer-events:none}
+  .toast.show{transform:translate(-50%,0);opacity:1}
+  .toast .tdot{width:8px;height:8px;border-radius:50%}
+
+  @media(max-width:440px){
+    .wrap{padding:16px 14px 90px}
+    .selectors{grid-template-columns:1fr}
+    .tab{font-size:14px;padding:10px 4px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="mark" aria-hidden="true"></div>
+    <div class="brand">
+      <h1>Silcore</h1>
+      <p>Silicon-steel stock</p>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Product">
+    <button type="button" class="tab" role="tab" data-product="Strip" aria-selected="true">Strip</button>
+    <button type="button" class="tab" role="tab" data-product="Coil" aria-selected="false">Coil</button>
+    <button type="button" class="tab" role="tab" data-product="Scrap" aria-selected="false">Scrap</button>
+  </div>
+
+  <div class="card readout">
+    <div class="eyebrow"><span>In stock · this spec</span><b id="ro-spec">—</b></div>
+    <div class="big" id="ro-subtotal">0</div>
+    <div class="spec-line" id="ro-total"><span>0</span> total across all specs of <span id="ro-prod">Strip</span></div>
+    <div class="gauge"><i id="ro-gauge"></i></div>
+  </div>
+
+  <div class="selectors">
+    <div class="field">
+      <label for="sel-thick">Thickness (mm)</label>
+      <div class="selWrap"><select id="sel-thick"></select></div>
+    </div>
+    <div class="field">
+      <label for="sel-len">Length (mm)</label>
+      <div class="selWrap"><select id="sel-len"></select></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button type="button" class="btn btn-add" id="btn-add"><span class="ico">+</span> Add stock</button>
+    <button type="button" class="btn btn-remove" id="btn-remove"><span class="ico">−</span> Remove stock</button>
+  </div>
+
+  <div class="section-head">
+    <h2>Breakdown</h2>
+    <span class="hint">net = added − removed</span>
+  </div>
+  <table id="breakdown">
+    <thead><tr><th>Spec</th><th>Added</th><th>Removed</th><th>Net</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="section-head">
+    <h2>Recent activity</h2>
+    <span class="hint" id="ledger-count"></span>
+  </div>
+  <ul class="ledger" id="ledger"></ul>
+  <div class="empty" id="ledger-empty" style="display:none">No movements yet. Add or remove stock to see it here.</div>
+
+  <details class="manage">
+    <summary>Manage specs <span class="chev">›</span></summary>
+    <div class="manage-body">
+      <div class="manage-row">
+        <div class="field">
+          <label for="new-thick">New thickness (mm)</label>
+          <input id="new-thick" type="number" step="0.01" inputmode="decimal" placeholder="e.g. 0.50">
+        </div>
+        <button type="button" class="mini" id="add-thick">Add</button>
+      </div>
+      <div class="manage-row">
+        <div class="field">
+          <label for="new-len">New length range</label>
+          <input id="new-len" type="text" placeholder="e.g. 2500 and above">
+        </div>
+        <button type="button" class="mini" id="add-len">Add</button>
+      </div>
+      <p class="reset">Data is saved in this browser only.
+        <button type="button" id="reset-btn">Reset everything to defaults</button>
+      </p>
+    </div>
+  </details>
+</div>
+
+<!-- Modal -->
+<div class="scrim" id="scrim">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <h3 id="m-title">Add stock</h3>
+    <p class="sub" id="m-sub"></p>
+    <input class="amount-in" id="m-amount" type="number" inputmode="decimal" step="any" min="0" placeholder="0">
+    <div class="err" id="m-err"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="m-cancel">Cancel</button>
+      <button type="button" class="btn btn-add" id="m-confirm">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="tdot"></span><span id="toast-msg"></span></div>
+
+<script>
+(function(){
+  "use strict";
+  var KEY="silcore.v1";
+
+  // ---- storage with graceful fallback (works when hosted / opened locally;
+  //      degrades to in-memory if a sandbox blocks localStorage) ----
+  var mem=null;
+  function canStore(){try{var k="__s";localStorage.setItem(k,"1");localStorage.removeItem(k);return true;}catch(e){return false;}}
+  var persistent=canStore();
+  function load(){
+    if(!persistent) return mem;
+    try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null;}catch(e){return null;}
+  }
+  function save(s){
+    if(persistent){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){persistent=false;mem=s;}}
+    else{mem=s;}
+  }
+
+  // ---- default seed: mirrors the original app's init() ----
+  function seed(){
+    return {
+      products:["Strip","Coil","Scrap"],
+      thicknesses:[0.23,0.27,0.30,0.35],
+      lengths:["500-1200","1200-2500","2500 and above"],
+      // append-only ledgers: {p:product, t:thickness, l:length, amt:number, ts:epoch}
+      added:[],
+      removed:[]
+    };
+  }
+
+  var state=load();
+  if(!state||!state.products){state=seed();save(state);}
+  // ensure arrays exist (forward-compat)
+  ["added","removed"].forEach(function(k){if(!Array.isArray(state[k]))state[k]=[];});
+
+  var ui={product:"Strip",thick:state.thicknesses[0],len:state.lengths[0],mode:"add"};
+
+  // ---- helpers ----
+  var $=function(id){return document.getElementById(id);};
+  function fmt(n){
+    if(!isFinite(n))n=0;
+    var r=Math.round(n*1000)/1000;
+    return (Number.isInteger(r)?r.toString():r.toString());
+  }
+  function sumFor(list,p,t,l){
+    var s=0;
+    for(var i=0;i<list.length;i++){var e=list[i];
+      if(e.p===p&&(t==null||e.t===t)&&(l==null||e.l===l))s+=e.amt;}
+    return s;
+  }
+  function net(p,t,l){return sumFor(state.added,p,t,l)-sumFor(state.removed,p,t,l);}
+
+  // ---- selectors ----
+  function fillSelectors(){
+    var st=$("sel-thick"),sl=$("sel-len");
+    st.innerHTML="";sl.innerHTML="";
+    state.thicknesses.forEach(function(t){
+      var o=document.createElement("option");o.value=t;o.textContent=fmt(t);
+      if(t===ui.thick)o.selected=true;st.appendChild(o);
+    });
+    state.lengths.forEach(function(l){
+      var o=document.createElement("option");o.value=l;o.textContent=l;
+      if(l===ui.len)o.selected=true;sl.appendChild(o);
+    });
+    // keep ui.thick/len valid
+    if(state.thicknesses.indexOf(ui.thick)<0)ui.thick=state.thicknesses[0];
+    if(state.lengths.indexOf(ui.len)<0)ui.len=state.lengths[0];
+  }
+
+  // ---- render ----
+  function render(){
+    // readout
+    var sub=net(ui.product,ui.thick,ui.len);
+    var tot=net(ui.product,null,null);
+    $("ro-spec").textContent=fmt(ui.thick)+" mm · "+ui.len;
+    var big=$("ro-subtotal");
+    big.textContent=fmt(sub);
+    big.classList.toggle("neg",sub<0);
+    $("ro-total").innerHTML="<span>"+fmt(tot)+"</span> total across all specs of <span>"+ui.product+"</span>";
+
+    // gauge: this spec as a share of the product's largest spec net
+    var maxSpec=0.0001;
+    state.thicknesses.forEach(function(t){state.lengths.forEach(function(l){
+      var v=net(ui.product,t,l);if(v>maxSpec)maxSpec=v;});});
+    var pct=Math.max(0,Math.min(100,(sub/maxSpec)*100));
+    $("ro-gauge").style.width=(sub>0?pct:0)+"%";
+
+    // breakdown table
+    var tb=$("breakdown").querySelector("tbody");tb.innerHTML="";
+    state.thicknesses.forEach(function(t){
+      state.lengths.forEach(function(l){
+        var a=sumFor(state.added,ui.product,t,l),
+            r=sumFor(state.removed,ui.product,t,l),
+            n=a-r;
+        if(a===0&&r===0)return; // only show specs with movement
+        var tr=document.createElement("tr");
+        if(t===ui.thick&&l===ui.len)tr.className="active";
+        tr.innerHTML="<td>"+fmt(t)+" mm · "+l+"</td>"+
+          "<td>"+fmt(a)+"</td><td>"+fmt(r)+"</td>"+
+          "<td class='net"+(n<0?" neg":"")+"'>"+fmt(n)+"</td>";
+        tb.appendChild(tr);
+      });
+    });
+    if(!tb.children.length){
+      var tr=document.createElement("tr");
+      tr.innerHTML="<td colspan='4' style='text-align:center;color:var(--faint);font-family:Inter'>No stock recorded for "+ui.product+" yet</td>";
+      tb.appendChild(tr);
+    }else{
+      var ta=sumFor(state.added,ui.product,null,null),
+          trm=sumFor(state.removed,ui.product,null,null);
+      var tr=document.createElement("tr");tr.className="totals";
+      tr.innerHTML="<td>Total · "+ui.product+"</td><td>"+fmt(ta)+"</td><td>"+fmt(trm)+"</td>"+
+        "<td class='net"+((ta-trm)<0?" neg":"")+"'>"+fmt(ta-trm)+"</td>";
+      tb.appendChild(tr);
+    }
+
+    // ledger (recent 12, this product)
+    var moves=[];
+    state.added.forEach(function(e){if(e.p===ui.product)moves.push({k:"add",e:e});});
+    state.removed.forEach(function(e){if(e.p===ui.product)moves.push({k:"rem",e:e});});
+    moves.sort(function(a,b){return b.e.ts-a.e.ts;});
+    var ul=$("ledger");ul.innerHTML="";
+    var empty=$("ledger-empty");
+    if(!moves.length){ul.style.display="none";empty.style.display="block";$("ledger-count").textContent="";}
+    else{
+      ul.style.display="block";empty.style.display="none";
+      $("ledger-count").textContent=moves.length+" movement"+(moves.length>1?"s":"");
+      moves.slice(0,12).forEach(function(m){
+        var li=document.createElement("li");
+        li.innerHTML="<span class='dot "+m.k+"'></span>"+
+          "<span class='amt "+m.k+"'>"+(m.k==="add"?"+":"−")+fmt(m.e.amt)+"</span>"+
+          "<span class='meta'><b>"+fmt(m.e.t)+" mm</b> · "+m.e.l+"</span>"+
+          "<span class='when'>"+timeAgo(m.e.ts)+"</span>";
+        ul.appendChild(li);
+      });
+    }
+  }
+
+  function timeAgo(ts){
+    var s=Math.floor((Date.now()-ts)/1000);
+    if(s<60)return "just now";
+    var m=Math.floor(s/60);if(m<60)return m+"m ago";
+    var h=Math.floor(m/60);if(h<24)return h+"h ago";
+    var d=Math.floor(h/24);if(d<7)return d+"d ago";
+    return new Date(ts).toLocaleDateString();
+  }
+
+  // ---- toast ----
+  var toastTimer;
+  function toast(msg,kind){
+    var t=$("toast");$("toast-msg").textContent=msg;
+    t.querySelector(".tdot").style.background=kind==="rem"?"var(--remove)":"var(--add)";
+    t.classList.add("show");clearTimeout(toastTimer);
+    toastTimer=setTimeout(function(){t.classList.remove("show");},2200);
+  }
+
+  // ---- modal ----
+  function openModal(mode){
+    ui.mode=mode;
+    var isAdd=mode==="add";
+    $("m-title").textContent=isAdd?"Add stock":"Remove stock";
+    $("m-sub").innerHTML="<b>"+ui.product+"</b> · "+fmt(ui.thick)+" mm · "+ui.len;
+    var c=$("m-confirm");
+    c.textContent=isAdd?"Add":"Remove";
+    c.className="btn "+(isAdd?"btn-add":"btn-remove");
+    $("m-err").textContent="";
+    $("m-amount").value="";
+    $("scrim").classList.add("open");
+    setTimeout(function(){$("m-amount").focus();},60);
+  }
+  function closeModal(){$("scrim").classList.remove("open");}
+
+  function confirmModal(){
+    var raw=$("m-amount").value.trim();
+    var v=parseFloat(raw);
+    if(raw===""||isNaN(v)){$("m-err").textContent="Enter an amount.";return;}
+    if(v<=0){$("m-err").textContent="Amount must be greater than 0.";return;}
+    var entry={p:ui.product,t:ui.thick,l:ui.len,amt:v,ts:Date.now()};
+    if(ui.mode==="add"){
+      state.added.push(entry);
+      save(state);render();toast("Added "+fmt(v)+" to "+ui.product,"add");
+    }else{
+      // warn (but allow) if removing more than currently in stock — mirrors app's ledger model
+      var avail=net(ui.product,ui.thick,ui.len);
+      if(v>avail){
+        $("m-err").textContent="Only "+fmt(avail)+" in stock for this spec. Remove anyway?";
+        // second confirm: change button to force intent
+        var c=$("m-confirm");
+        if(c.dataset.forced!=="1"){c.dataset.forced="1";c.textContent="Remove anyway";return;}
+      }
+      state.removed.push(entry);
+      save(state);render();toast("Removed "+fmt(v)+" from "+ui.product,"rem");
+    }
+    $("m-confirm").dataset.forced="";
+    closeModal();
+  }
+
+  // ---- events ----
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(tab){
+    tab.addEventListener("click",function(){
+      document.querySelectorAll(".tab").forEach(function(t){t.setAttribute("aria-selected","false");});
+      tab.setAttribute("aria-selected","true");
+      ui.product=tab.dataset.product;render();
+    });
+  });
+  $("sel-thick").addEventListener("change",function(){ui.thick=parseFloat(this.value);render();});
+  $("sel-len").addEventListener("change",function(){ui.len=this.value;render();});
+  $("btn-add").addEventListener("click",function(){openModal("add");});
+  $("btn-remove").addEventListener("click",function(){openModal("remove");});
+  $("m-cancel").addEventListener("click",closeModal);
+  $("m-confirm").addEventListener("click",confirmModal);
+  $("scrim").addEventListener("click",function(e){if(e.target===this)closeModal();});
+  $("m-amount").addEventListener("keydown",function(e){if(e.key==="Enter")confirmModal();});
+  $("m-amount").addEventListener("input",function(){
+    $("m-err").textContent="";var c=$("m-confirm");
+    if(c.dataset.forced==="1"){c.dataset.forced="";c.textContent=ui.mode==="add"?"Add":"Remove";}
+  });
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")closeModal();});
+
+  // manage
+  $("add-thick").addEventListener("click",function(){
+    var v=parseFloat($("new-thick").value);
+    if(isNaN(v)||v<=0){toast("Enter a valid thickness","rem");return;}
+    if(state.thicknesses.indexOf(v)>=0){toast("That thickness already exists","rem");return;}
+    state.thicknesses.push(v);state.thicknesses.sort(function(a,b){return a-b;});
+    ui.thick=v;save(state);$("new-thick").value="";fillSelectors();render();toast("Added "+fmt(v)+" mm","add");
+  });
+  $("add-len").addEventListener("click",function(){
+    var v=$("new-len").value.trim();
+    if(!v){toast("Enter a length range","rem");return;}
+    if(state.lengths.indexOf(v)>=0){toast("That length already exists","rem");return;}
+    state.lengths.push(v);ui.len=v;save(state);$("new-len").value="";fillSelectors();render();toast("Added length "+v,"add");
+  });
+  $("reset-btn").addEventListener("click",function(){
+    if(!confirm("Reset all stock, specs and history back to defaults? This can't be undone."))return;
+    state=seed();save(state);ui.product="Strip";ui.thick=state.thicknesses[0];ui.len=state.lengths[0];
+    document.querySelectorAll(".tab").forEach(function(t,i){t.setAttribute("aria-selected",i===0?"true":"false");});
+    fillSelectors();render();toast("Reset to defaults","add");
+  });
+
+  // ---- boot ----
+  fillSelectors();render();
+})();
+</script>
+</body>
+</html>
